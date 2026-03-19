@@ -1,0 +1,8 @@
+flask
+flask-mysqldb
+flask-cors
+python-dotenv
+werkzeug
+scikit-learn
+pandas
+numpy

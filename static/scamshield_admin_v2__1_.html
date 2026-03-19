@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScamShield – Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#1a6cf6;--primary-light:#4d8ef8;--primary-dark:#0f4fc7;
+  --accent:#00c2a8;--danger:#e5382a;--warning:#f5a623;--success:#22b573;
+  --bg:#f0f4ff;--bg2:#e8eeff;--white:#ffffff;
+  --card:rgba(255,255,255,0.72);--card-border:rgba(255,255,255,0.9);
+  --text:#0f172a;--text2:#334155;--text3:#64748b;
+  --shadow:0 8px 32px rgba(26,108,246,0.10);--shadow-lg:0 20px 60px rgba(26,108,246,0.18);
+  --radius:18px;--radius-sm:12px;--sidebar-w:240px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+input,textarea,select,button{font-family:'Plus Jakarta Sans',sans-serif}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#e8eeff}::-webkit-scrollbar-thumb{background:#b8ccff;border-radius:3px}
+
+/* ORBS */
+.bg-orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);animation:orbFloat 8s ease-in-out infinite}
+.orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(26,108,246,0.13),transparent 70%);top:-200px;left:-150px}
+.orb2{width:500px;height:500px;background:radial-gradient(circle,rgba(0,194,168,0.10),transparent 70%);top:30%;right:-150px;animation-delay:-3s}
+.orb3{width:400px;height:400px;background:radial-gradient(circle,rgba(229,56,42,0.07),transparent 70%);bottom:-100px;left:30%;animation-delay:-5s}
+@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-40px) scale(1.05)}}
+
+/* GLASS */
+.glass{background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1.5px solid var(--card-border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.glass-strong{background:rgba(255,255,255,0.90);backdrop-filter:blur(30px);border:1.5px solid rgba(255,255,255,0.95);border-radius:var(--radius);box-shadow:var(--shadow-lg)}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:0.7}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.anim-fadeUp{animation:fadeUp 0.5s ease both}
+.d1{animation-delay:0.05s}.d2{animation-delay:0.1s}.d3{animation-delay:0.15s}
+.d4{animation-delay:0.2s}.d5{animation-delay:0.25s}.d6{animation-delay:0.3s}
+
+/* ════════════════════════════════
+   ADMIN LOGIN GATE
+════════════════════════════════ */
+#login-gate{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#e8f0ff 0%,#f0f7ff 50%,#e4f5f1 100%);display:flex;align-items:center;justify-content:center}
+#login-gate.hidden{display:none}
+.login-card{width:420px;padding:44px 40px;animation:scaleIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both}
+.login-logo-row{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center}
+.login-logo{width:48px;height:48px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 6px 20px rgba(26,108,246,0.35)}
+.login-title{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.5px}
+.login-sub-title{font-size:13px;font-weight:600;color:var(--primary)}
+.admin-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(229,56,42,0.1);border:1.5px solid rgba(229,56,42,0.2);border-radius:20px;padding:5px 14px;font-size:11.5px;font-weight:700;color:var(--danger);margin-bottom:24px}
+.form-label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px}
+.form-group{margin-bottom:16px}
+.form-input{width:100%;padding:11px 14px;background:rgba(255,255,255,0.85);border:1.5px solid rgba(26,108,246,0.15);border-radius:10px;color:var(--text);font-size:13.5px;outline:none;transition:all 0.2s}
+.form-input:focus{border-color:var(--primary);background:white;box-shadow:0 0 0 3px rgba(26,108,246,0.1)}
+.form-input.error{border-color:var(--danger);box-shadow:0 0 0 3px rgba(229,56,42,0.1);animation:shake 0.3s ease}
+.input-icon-wrap{position:relative}
+.input-icon-wrap .form-input{padding-right:42px}
+.input-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:var(--text3)}
+.login-error{background:rgba(229,56,42,0.07);border:1.5px solid rgba(229,56,42,0.2);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--danger);font-weight:600;display:none;margin-bottom:14px;animation:fadeIn 0.2s ease}
+.login-error.show{display:flex;align-items:center;gap:8px}
+.login-hint{background:rgba(26,108,246,0.06);border:1.5px solid rgba(26,108,246,0.15);border-radius:10px;padding:11px 14px;font-size:12px;color:var(--text3);margin-top:16px;line-height:1.6}
+
+/* BUTTONS */
+.btn-primary{padding:11px 22px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border:none;border-radius:10px;color:white;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(26,108,246,0.35);transition:all 0.22s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(26,108,246,0.45)}
+.btn-outline{padding:9px 18px;background:white;border:1.5px solid rgba(26,108,246,0.2);border-radius:10px;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-outline:hover{background:rgba(26,108,246,0.06);border-color:var(--primary)}
+.btn-danger{padding:9px 18px;background:linear-gradient(135deg,var(--danger),#f05545);border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-danger:hover{transform:translateY(-1px)}
+.btn-success{padding:9px 18px;background:linear-gradient(135deg,var(--success),#28d68a);border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+.btn-warn{padding:9px 18px;background:linear-gradient(135deg,var(--warning),#f7bc4a);border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px}
+
+/* ════════════════════════════════
+   APP SHELL
+════════════════════════════════ */
+#app-shell{display:none}
+#app-shell.visible{display:flex;min-height:100vh;position:relative;z-index:1}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:rgba(255,255,255,0.85);backdrop-filter:blur(24px);border-right:1.5px solid rgba(255,255,255,0.9);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;box-shadow:4px 0 24px rgba(26,108,246,0.07)}
+.sidebar-brand{padding:20px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1.5px solid rgba(26,108,246,0.08)}
+.sidebar-logo{width:38px;height:38px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 14px rgba(26,108,246,0.35);flex-shrink:0}
+.sidebar-brand-text{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-0.4px}
+.sidebar-brand-sub{font-size:10px;font-weight:700;color:var(--danger);letter-spacing:0.8px;text-transform:uppercase}
+.sidebar-nav{flex:1;padding:14px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.nav-section-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;padding:10px 10px 5px;margin-top:4px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;transition:all 0.2s;border:1.5px solid transparent;color:var(--text2);font-size:13px;font-weight:600;position:relative;text-decoration:none}
+.sidebar-item:hover{background:rgba(26,108,246,0.07);color:var(--primary)}
+.sidebar-item.active{background:rgba(26,108,246,0.1);color:var(--primary);border-color:rgba(26,108,246,0.15)}
+.sidebar-item.active::before{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--primary);border-radius:0 2px 2px 0}
+.sidebar-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-badge{margin-left:auto;color:white;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:20px;text-align:center}
+.sidebar-badge.red{background:var(--danger)}
+.sidebar-badge.orange{background:var(--warning)}
+.sidebar-badge.blue{background:var(--primary)}
+.sidebar-badge.green{background:var(--success)}
+.sidebar-footer{padding:12px 10px;border-top:1.5px solid rgba(26,108,246,0.08)}
+.admin-user-row{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;background:rgba(229,56,42,0.06);border:1.5px solid rgba(229,56,42,0.12);cursor:pointer}
+.admin-avatar{width:32px;height:32px;background:linear-gradient(135deg,#e5382a,#f05545);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0}
+.admin-name{font-size:12.5px;font-weight:700;color:var(--text)}
+.admin-role{font-size:10px;color:var(--danger);font-weight:700}
+
+/* TOPBAR */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:62px;background:rgba(255,255,255,0.82);backdrop-filter:blur(24px);border-bottom:1.5px solid rgba(255,255,255,0.9);padding:0 28px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 20px rgba(26,108,246,0.07);position:sticky;top:0;z-index:50}
+.topbar-title{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-0.4px;flex:1}
+.topbar-search{display:flex;align-items:center;gap:8px;background:rgba(26,108,246,0.06);border:1.5px solid rgba(26,108,246,0.12);border-radius:10px;padding:8px 13px;width:260px;transition:all 0.2s}
+.topbar-search:focus-within{border-color:var(--primary);background:white;box-shadow:0 0 0 3px rgba(26,108,246,0.1)}
+.topbar-search input{background:none;border:none;outline:none;font-size:13px;color:var(--text);width:100%}
+.icon-btn{width:36px;height:36px;background:rgba(26,108,246,0.07);border:1.5px solid rgba(26,108,246,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:all 0.2s;position:relative}
+.icon-btn:hover{background:rgba(26,108,246,0.14);transform:scale(1.05)}
+.notif-dot{width:8px;height:8px;background:var(--danger);border-radius:50%;position:absolute;top:6px;right:6px;border:2px solid white;animation:pulse 2s infinite}
+
+/* CONTENT */
+.content{padding:26px 28px;flex:1}
+.section{display:none}.section.active{display:block}
+.page-header{margin-bottom:22px;animation:fadeUp 0.5s ease both}
+.page-title{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-0.6px;margin-bottom:3px}
+.page-subtitle{font-size:13px;color:var(--text3)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.2px}
+.badge-danger{background:rgba(229,56,42,0.1);color:var(--danger);border:1px solid rgba(229,56,42,0.25)}
+.badge-success{background:rgba(34,181,115,0.1);color:var(--success);border:1px solid rgba(34,181,115,0.25)}
+.badge-info{background:rgba(26,108,246,0.1);color:var(--primary);border:1px solid rgba(26,108,246,0.25)}
+.badge-warn{background:rgba(245,166,35,0.1);color:var(--warning);border:1px solid rgba(245,166,35,0.25)}
+.badge-neutral{background:rgba(100,116,139,0.1);color:var(--text3);border:1px solid rgba(100,116,139,0.2)}
+.badge-purple{background:rgba(139,92,246,0.1);color:#8b5cf6;border:1px solid rgba(139,92,246,0.25)}
+
+/* STAT */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{padding:20px 18px;position:relative;overflow:hidden;transition:transform 0.22s,box-shadow 0.22s}
+.stat-card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(26,108,246,0.18)}
+.stat-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0}
+.stat-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px}
+.stat-value{font-size:30px;font-weight:800;letter-spacing:-1.5px;font-family:'DM Mono',monospace;margin-bottom:4px}
+.stat-sub{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.stat-icon-bg{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:28px;opacity:0.1}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;padding:11px 15px;background:rgba(26,108,246,0.04);border-bottom:1.5px solid rgba(26,108,246,0.08);text-align:left;white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(26,108,246,0.06);transition:background 0.15s}
+tbody tr:hover{background:rgba(26,108,246,0.03)}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:11px 15px;font-size:12.5px;color:var(--text2);vertical-align:middle}
+.td-mono{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text3)}
+.row-actions{display:flex;align-items:center;gap:5px;opacity:0;transition:opacity 0.15s}
+tbody tr:hover .row-actions{opacity:1}
+.action-btn{width:27px;height:27px;border-radius:7px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all 0.15s}
+.action-btn.view{background:rgba(26,108,246,0.1);color:var(--primary)}
+.action-btn.view:hover{background:rgba(26,108,246,0.2)}
+.action-btn.ok{background:rgba(34,181,115,0.1);color:var(--success)}
+.action-btn.ok:hover{background:rgba(34,181,115,0.2)}
+.action-btn.del{background:rgba(229,56,42,0.1);color:var(--danger)}
+.action-btn.del:hover{background:rgba(229,56,42,0.2)}
+.action-btn.edit{background:rgba(245,166,35,0.1);color:var(--warning)}
+.action-btn.edit:hover{background:rgba(245,166,35,0.2)}
+
+/* FORM */
+.form-select{width:100%;padding:10px 13px;background:white;border:1.5px solid rgba(26,108,246,0.15);border-radius:10px;color:var(--text);font-size:13px;outline:none;cursor:pointer;transition:all 0.2s}
+.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,108,246,0.1)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* TOGGLE */
+.toggle{width:44px;height:24px;background:#d1d9e0;border-radius:12px;position:relative;cursor:pointer;transition:background 0.25s;flex-shrink:0;border:none}
+.toggle.on{background:linear-gradient(135deg,var(--primary),var(--primary-light))}
+.toggle::after{content:'';width:18px;height:18px;background:white;border-radius:50%;position:absolute;top:3px;left:3px;transition:left 0.25s;box-shadow:0 2px 5px rgba(0,0,0,0.2)}
+.toggle.on::after{left:23px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.35);backdrop-filter:blur(6px);z-index:400;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex;animation:fadeIn 0.2s ease}
+.modal{background:white;border-radius:var(--radius);padding:30px;width:100%;max-width:500px;box-shadow:var(--shadow-lg);animation:scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both;position:relative;max-height:90vh;overflow-y:auto}
+.modal-close{position:absolute;top:14px;right:14px;width:28px;height:28px;background:rgba(26,108,246,0.08);border:none;border-radius:7px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all 0.2s}
+.modal-close:hover{background:rgba(229,56,42,0.1);color:var(--danger)}
+
+/* PROGRESS */
+.progress-wrap{height:6px;background:rgba(26,108,246,0.1);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width 1s ease}
+
+/* ALERT */
+.alert-banner{padding:12px 16px;border-radius:12px;display:flex;align-items:center;gap:11px;margin-bottom:14px;font-size:13px;font-weight:600}
+.alert-banner.danger{background:rgba(229,56,42,0.07);border:1.5px solid rgba(229,56,42,0.2);color:var(--danger)}
+.alert-banner.warn{background:rgba(245,166,35,0.07);border:1.5px solid rgba(245,166,35,0.2);color:#b87000}
+.alert-banner.success{background:rgba(34,181,115,0.07);border:1.5px solid rgba(34,181,115,0.2);color:var(--success)}
+
+/* FILTER CHIPS */
+.filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filter-chip{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid rgba(26,108,246,0.15);background:white;color:var(--text3);transition:all 0.2s}
+.filter-chip.active{background:rgba(26,108,246,0.1);border-color:var(--primary);color:var(--primary)}
+.filter-chip:hover{border-color:var(--primary);color:var(--primary)}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;gap:5px}
+.page-btn{width:30px;height:30px;border-radius:7px;border:1.5px solid rgba(26,108,246,0.15);background:white;color:var(--text3);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.page-btn:hover,.page-btn.active{background:rgba(26,108,246,0.1);border-color:var(--primary);color:var(--primary)}
+
+/* TWO/THREE COL */
+.two-col{display:grid;grid-template-columns:1fr 320px;gap:16px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* STATUS */
+.status-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(26,108,246,0.06)}
+.status-row:last-child{border-bottom:none}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.green{background:var(--success);box-shadow:0 0 0 3px rgba(34,181,115,0.2)}
+.status-dot.yellow{background:var(--warning);box-shadow:0 0 0 3px rgba(245,166,35,0.2)}
+.status-dot.red{background:var(--danger);box-shadow:0 0 0 3px rgba(229,56,42,0.2)}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:14.5px;font-weight:800;color:var(--text);letter-spacing:-0.3px}
+.section-sub{font-size:11.5px;color:var(--text3);margin-top:1px}
+
+/* ACTIVITY */
+.activity-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(26,108,246,0.06)}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.activity-msg{font-size:12.5px;color:var(--text2);line-height:1.5}
+.activity-time{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* DIVIDER */
+.divider{height:1px;background:rgba(26,108,246,0.08);margin:16px 0}
+
+/* USER AVATAR */
+.user-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:10.5px;font-weight:800;flex-shrink:0}
+
+/* ════════════════════════════════
+   INBOX SECTION STYLES
+════════════════════════════════ */
+.inbox-layout{display:grid;grid-template-columns:260px 1fr;gap:0;border-radius:var(--radius);overflow:hidden;background:white;border:1.5px solid var(--card-border);box-shadow:var(--shadow);min-height:560px}
+.inbox-sidebar{border-right:1.5px solid rgba(26,108,246,0.08);padding:16px 12px;display:flex;flex-direction:column;gap:2px;background:rgba(248,250,255,0.7)}
+.inbox-folder{padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text3);transition:all 0.2s;display:flex;align-items:center;gap:9px}
+.inbox-folder:hover,.inbox-folder.active{background:rgba(26,108,246,0.09);color:var(--primary)}
+.inbox-folder .folder-count{margin-left:auto;background:var(--primary);color:white;font-size:10px;font-weight:800;padding:1px 7px;border-radius:10px;min-width:20px;text-align:center}
+.inbox-folder .folder-count.orange{background:var(--warning)}
+.inbox-folder .folder-count.red{background:var(--danger)}
+.inbox-main{display:flex;flex-direction:column;overflow:hidden}
+.inbox-toolbar{padding:14px 18px;border-bottom:1.5px solid rgba(26,108,246,0.08);display:flex;align-items:center;gap:10px}
+.inbox-search{display:flex;align-items:center;gap:7px;flex:1;background:rgba(26,108,246,0.05);border:1.5px solid rgba(26,108,246,0.1);border-radius:9px;padding:7px 12px}
+.inbox-search input{background:none;border:none;outline:none;font-size:13px;width:100%;color:var(--text)}
+.inbox-list{flex:1;overflow-y:auto;max-height:480px}
+.inbox-item{padding:13px 18px;border-bottom:1px solid rgba(26,108,246,0.06);cursor:pointer;transition:background 0.15s;display:flex;gap:12px;align-items:flex-start}
+.inbox-item:hover{background:rgba(26,108,246,0.04)}
+.inbox-item.selected{background:rgba(26,108,246,0.07)}
+.inbox-item.unread{background:rgba(26,108,246,0.03)}
+.inbox-item.unread .inbox-sender{font-weight:800;color:var(--text)}
+.inbox-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:5px}
+.inbox-dot.read{background:transparent}
+.inbox-sender{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:2px}
+.inbox-subject{font-size:12.5px;color:var(--text2);margin-bottom:2px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.inbox-preview{font-size:11.5px;color:var(--text3);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.inbox-meta{margin-left:auto;text-align:right;flex-shrink:0}
+.inbox-time{font-size:11px;color:var(--text3);white-space:nowrap}
+.inbox-detail{padding:24px 28px;border-left:1.5px solid rgba(26,108,246,0.08);min-height:500px;display:none;flex-direction:column}
+.inbox-detail.visible{display:flex}
+.detail-from{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:4px}
+.detail-subject{font-size:17px;font-weight:800;color:var(--text);margin-bottom:12px;letter-spacing:-0.3px}
+.detail-body{font-size:13.5px;color:var(--text2);line-height:1.75;flex:1}
+.reply-box{margin-top:16px;border-top:1.5px solid rgba(26,108,246,0.08);padding-top:16px}
+
+/* INBOX STATS */
+.inbox-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.inbox-stat{padding:16px 14px;text-align:center}
+.inbox-stat-val{font-size:24px;font-weight:800;font-family:'DM Mono',monospace;margin-bottom:3px}
+.inbox-stat-label{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+
+/* TOAST */
+#toast-container{position:fixed;bottom:22px;right:22px;display:flex;flex-direction:column;gap:8px;z-index:9998;pointer-events:none}
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+<div id="toast-container"></div>
+
+<!-- ══════════════════════════════════
+     ADMIN LOGIN GATE
+══════════════════════════════════ -->
+<div id="login-gate">
+  <div class="glass-strong login-card">
+    <div class="login-logo-row">
+      <div class="login-logo">🛡️</div>
+      <div>
+        <div class="login-title">ScamShield</div>
+        <div class="login-sub-title">Admin Portal</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:22px">
+      <div class="admin-badge">🔐 Restricted Access — Authorised Personnel Only</div>
+    </div>
+
+    <div class="login-error" id="login-error">
+      <span>⚠️</span><span id="login-error-msg">Invalid credentials. Please try again.</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Admin ID</label>
+      <input class="form-input" type="text" id="admin-id" placeholder="e.g. ADMIN-001" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div class="input-icon-wrap">
+        <input class="form-input" type="password" id="admin-pass" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="input-eye" onclick="toggleLoginPass(this)" tabindex="-1">👁️</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">2FA Code <span style="font-weight:400;text-transform:none;color:var(--text3)">(optional in demo)</span></label>
+      <input class="form-input" type="text" id="admin-2fa" placeholder="6-digit code" maxlength="6" style="letter-spacing:4px;font-family:'DM Mono',monospace">
+    </div>
+
+    <button class="btn-primary" style="width:100%;justify-content:center;font-size:14px;padding:13px" onclick="doLogin()" id="login-btn">
+      Sign In to Admin Panel →
+    </button>
+
+    <div class="login-hint">
+      <b>Mock login — no database needed:</b><br>Enter <em>any</em> Admin ID and password to access the panel. Your ID becomes your display name.
+
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     APP SHELL
+══════════════════════════════════ -->
+<div id="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">🛡️</div>
+      <div>
+        <div class="sidebar-brand-text">ScamShield</div>
+        <div class="sidebar-brand-sub">⬤ Admin Panel</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <div class="sidebar-item active" onclick="showSection('dashboard',this)"><span class="sidebar-icon">📊</span>Dashboard</div>
+      <div class="sidebar-item" onclick="showSection('analytics',this)"><span class="sidebar-icon">📈</span>Analytics</div>
+
+      <div class="nav-section-label">User Activity</div>
+      <div class="sidebar-item" onclick="showSection('inbox',this)">
+        <span class="sidebar-icon">📬</span>Inbox & Messages
+        <span class="sidebar-badge red" id="inbox-badge">—</span>
+      </div>
+      <div class="sidebar-item" onclick="showSection('users',this)">
+        <span class="sidebar-icon">👥</span>Users
+        <span class="sidebar-badge blue" id="sidebar-scans-badge">—</span>
+      </div>
+      <div class="sidebar-item" onclick="showSection('reports',this)">
+        <span class="sidebar-icon">📋</span>User Reports
+        <span class="sidebar-badge red">—</span>
+      </div>
+      <div class="sidebar-item" onclick="showSection('scans',this)">
+        <span class="sidebar-icon">🔍</span>Scan Logs</div>
+
+      <div class="nav-section-label">Platform</div>
+      <div class="sidebar-item" onclick="showSection('threats',this)">
+        <span class="sidebar-icon">⚠️</span>Threat Library
+        <span class="sidebar-badge orange">—</span>
+      </div>
+      <div class="sidebar-item" onclick="showSection('moderation',this)"><span class="sidebar-icon">🛡️</span>Moderation</div>
+      <div class="sidebar-item" onclick="showSection('settings',this)"><span class="sidebar-icon">⚙️</span>Settings</div>
+      <div class="sidebar-item" onclick="showSection('audit',this)"><span class="sidebar-icon">📁</span>Audit Log</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-user-row" onclick="showToast('Admin profile settings coming soon','info')">
+        <div class="admin-avatar" id="sidebar-avatar">SA</div>
+        <div>
+          <div class="admin-name" id="sidebar-name">Super Admin</div>
+          <div class="admin-role" id="sidebar-id-display">ID: ADMIN-001</div>
+        </div>
+        <span style="margin-left:auto;cursor:pointer;font-size:13px;color:var(--text3)" onclick="event.stopPropagation();doLogout()" title="Sign out">🚪</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard Overview</div>
+      <div class="topbar-search">
+        <span style="font-size:13px;color:var(--text3)">🔍</span>
+        <input type="text" placeholder="Search users, reports, threats…">
+      </div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="icon-btn" onclick="showSection('inbox',document.querySelector('[onclick*=inbox]'));showToast('3 unread contact messages','info')">
+          📬<div class="notif-dot"></div>
+        </div>
+        <div class="icon-btn" onclick="refreshData(this)">🔄</div>
+        <button class="btn-primary" style="font-size:12px;padding:8px 14px" onclick="showToast('Export started','success')">⬇ Export</button>
+        <div style="display:flex;align-items:center;gap:7px;padding:5px 10px;background:rgba(26,108,246,0.06);border:1.5px solid rgba(26,108,246,0.12);border-radius:9px">
+          <div class="admin-avatar" style="width:26px;height:26px;font-size:9px" id="topbar-avatar">SA</div>
+          <span style="font-size:12px;font-weight:700;color:var(--text)" id="topbar-name">Super Admin</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div class="section active" id="s-dashboard">
+        <div class="page-header">
+          <div class="page-title">Dashboard Overview</div>
+          <div class="page-subtitle">Platform health & real-time activity — <span id="live-time" style="font-family:'DM Mono',monospace"></span></div>
+        </div>
+        <div class="alert-banner danger anim-fadeUp">
+          <span style="font-size:17px">🚨</span>
+          <span><b>8 new threat patterns</b> detected in last 24 hrs. <span style="cursor:pointer;text-decoration:underline" onclick="showSection('threats',document.querySelectorAll('.sidebar-item')[9])">Review →</span></span>
+          <button onclick="this.parentElement.style.display='none'" style="margin-left:auto;background:none;border:none;cursor:pointer;color:inherit">✕</button>
+        </div>
+        <div class="stat-grid">
+          <div class="glass stat-card anim-fadeUp d1"><div class="stat-accent" style="background:linear-gradient(90deg,var(--primary),var(--primary-light))"></div><div class="stat-label">Total Users</div><div class="stat-value" style="color:var(--primary)" id="stat-total-users">—</div><div class="stat-sub" style="color:var(--success)" id="stat-users-sub">Loading...</div><div class="stat-icon-bg">👥</div></div>
+          <div class="glass stat-card anim-fadeUp d2"><div class="stat-accent" style="background:linear-gradient(90deg,var(--danger),#f05545)"></div><div class="stat-label">Scams Blocked</div><div class="stat-value" style="color:var(--danger)" id="stat-total-scams">—</div><div class="stat-sub" style="color:var(--success)" id="stat-scams-sub">Loading...</div><div class="stat-icon-bg">🛡️</div></div>
+          <div class="glass stat-card anim-fadeUp d3"><div class="stat-accent" style="background:linear-gradient(90deg,var(--success),#28d68a)"></div><div class="stat-label">Scans Today</div><div class="stat-value" style="color:var(--success)" id="stat-scans-today">—</div><div class="stat-sub" style="color:var(--success)" id="stat-scans-today-sub">Loading...</div><div class="stat-icon-bg">🔍</div></div>
+          <div class="glass stat-card anim-fadeUp d4"><div class="stat-accent" style="background:linear-gradient(90deg,var(--warning),#f7bc4a)"></div><div class="stat-label">Unread Messages</div><div class="stat-value" style="color:var(--warning)" id="stat-unread-msgs">—</div><div class="stat-sub" style="color:var(--danger)" id="stat-unread-sub">Loading...</div><div class="stat-icon-bg">📬</div></div>
+        </div>
+        <div class="two-col">
+          <div class="glass" style="padding:20px">
+            <div class="section-header"><div><div class="section-title">Scan Volume — 14 Days</div><div class="section-sub">Daily scans and scam detections</div></div><select class="form-select" style="width:auto;font-size:12px;padding:5px 9px"><option>14 days</option><option>30 days</option></select></div>
+            <canvas id="scanChart" height="130"></canvas>
+          </div>
+          <div class="glass" style="padding:20px">
+            <div class="section-header"><div class="section-title">Live Activity Feed</div><div style="font-size:11px;color:var(--success);font-weight:700;display:flex;align-items:center;gap:5px"><div style="width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 2s infinite"></div>LIVE</div></div>
+            <div id="activity-feed"></div>
+            <div class="divider"></div>
+            <div class="section-header"><div class="section-title">System Status</div></div>
+            <div id="system-status"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ANALYTICS ══ -->
+      <div class="section" id="s-analytics">
+        <div class="page-header"><div class="page-title">Analytics</div><div class="page-subtitle">Detailed platform performance data</div></div>
+        <div class="three-col" style="margin-bottom:16px">
+          <div class="glass" style="padding:20px"><div class="stat-label">Detection Accuracy</div><div style="font-size:32px;font-weight:800;font-family:'DM Mono',monospace;color:var(--success);margin-bottom:6px"><span id="stat-detection-rate">—</span></div><div class="progress-wrap"><div class="progress-fill" id="stat-detection-bar" style="width:0%;background:linear-gradient(90deg,var(--success),#28d68a)"></div></div></div>
+          <div class="glass" style="padding:20px"><div class="stat-label">False Positive Rate</div><div style="font-size:32px;font-weight:800;font-family:'DM Mono',monospace;color:var(--warning);margin-bottom:6px">2.1%</div><div class="progress-wrap"><div class="progress-fill" style="width:2.1%;background:linear-gradient(90deg,var(--warning),#f7bc4a)"></div></div></div>
+          <div class="glass" style="padding:20px"><div class="stat-label">Avg Scan Time</div><div style="font-size:32px;font-weight:800;font-family:'DM Mono',monospace;color:var(--primary);margin-bottom:6px">1.4s</div><div class="progress-wrap"><div class="progress-fill" style="width:60%;background:linear-gradient(90deg,var(--primary),var(--primary-light))"></div></div></div>
+        </div>
+        <div class="two-col">
+          <div class="glass" style="padding:20px">
+            <div class="section-header"><div class="section-title">Top Scam Categories</div></div>
+            <div id="scam-categories"></div>
+          </div>
+          <div class="glass" style="padding:20px">
+            <div class="section-header"><div class="section-title">Threat Breakdown</div></div>
+            <canvas id="threatPie" height="150"></canvas>
+            <div id="threat-legend" style="display:flex;flex-direction:column;gap:7px;margin-top:14px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ INBOX & MESSAGES ══ -->
+      <div class="section" id="s-inbox">
+        <div class="page-header">
+          <div class="page-title">Inbox & Messages</div>
+          <div class="page-subtitle">All user contact submissions, feedback, scam reports and platform notifications</div>
+        </div>
+
+        <!-- INBOX STATS -->
+        <div class="inbox-stats">
+          <div class="glass inbox-stat anim-fadeUp d1">
+            <div class="inbox-stat-val" style="color:var(--danger)" id="inbox-stat-unread">—</div>
+            <div class="inbox-stat-label">Unread</div>
+          </div>
+          <div class="glass inbox-stat anim-fadeUp d2">
+            <div class="inbox-stat-val" style="color:var(--warning)" id="inbox-stat-pending">—</div>
+            <div class="inbox-stat-label">Pending Reply</div>
+          </div>
+          <div class="glass inbox-stat anim-fadeUp d3">
+            <div class="inbox-stat-val" style="color:var(--primary)" id="inbox-stat-total">—</div>
+            <div class="inbox-stat-label">Total Messages</div>
+          </div>
+          <div class="glass inbox-stat anim-fadeUp d4">
+            <div class="inbox-stat-val" style="color:var(--success)">96%</div>
+            <div class="inbox-stat-label">Response Rate</div>
+          </div>
+        </div>
+
+        <!-- INBOX LAYOUT -->
+        <div class="inbox-layout anim-fadeUp d2">
+          <!-- LEFT: FOLDER SIDEBAR -->
+          <div class="inbox-sidebar">
+            <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.7px;padding:2px 6px 8px">Folders</div>
+            <div class="inbox-folder active" id="ifolder-all" onclick="switchInboxFolder('all',this)">📥 All Messages <span class="folder-count red">12</span></div>
+            <div class="inbox-folder" id="ifolder-contact" onclick="switchInboxFolder('contact',this)">✉️ Contact Forms <span class="folder-count">8</span></div>
+            <div class="inbox-folder" id="ifolder-reports" onclick="switchInboxFolder('reports',this)">🚨 Scam Reports <span class="folder-count red">4</span></div>
+            <div class="inbox-folder" id="ifolder-feedback" onclick="switchInboxFolder('feedback',this)">💬 Feedback</div>
+            <div class="inbox-folder" id="ifolder-support" onclick="switchInboxFolder('support',this)">🆘 Support / Urgent <span class="folder-count orange">3</span></div>
+            <div class="inbox-folder" id="ifolder-notifs" onclick="switchInboxFolder('notifs',this)">🔔 System Notifications</div>
+            <div class="inbox-folder" id="ifolder-resolved" onclick="switchInboxFolder('resolved',this)">✅ Resolved</div>
+
+            <div class="divider"></div>
+
+            <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.7px;padding:2px 6px 8px;margin-top:4px">By Type</div>
+            <div class="inbox-folder" onclick="switchInboxFolder('billing',this)">💳 Billing</div>
+            <div class="inbox-folder" onclick="switchInboxFolder('technical',this)">🔧 Technical</div>
+            <div class="inbox-folder" onclick="switchInboxFolder('general',this)">💼 General</div>
+          </div>
+
+          <!-- RIGHT: MESSAGE LIST + DETAIL -->
+          <div class="inbox-main">
+            <div class="inbox-toolbar">
+              <div class="inbox-search">
+                <span style="font-size:13px;color:var(--text3)">🔍</span>
+                <input type="text" placeholder="Search messages…" oninput="filterInbox(this.value)">
+              </div>
+              <select class="form-select" style="width:auto;font-size:12px;padding:7px 10px" onchange="filterInboxType(this.value)">
+                <option value="">All Types</option>
+                <option value="contact">Contact</option>
+                <option value="report">Scam Report</option>
+                <option value="support">Support</option>
+                <option value="feedback">Feedback</option>
+                <option value="billing">Billing</option>
+              </select>
+              <select class="form-select" style="width:auto;font-size:12px;padding:7px 10px">
+                <option>Newest First</option>
+                <option>Oldest First</option>
+                <option>Priority</option>
+              </select>
+              <button class="btn-primary" style="font-size:12px;padding:8px 13px;white-space:nowrap" onclick="showToast('All selected marked as read','success')">Mark Read</button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;height:100%">
+              <!-- MESSAGE LIST -->
+              <div style="border-right:1.5px solid rgba(26,108,246,0.08)">
+                <div class="inbox-list" id="inbox-messages-list"></div>
+              </div>
+              <!-- MESSAGE DETAIL -->
+              <div class="inbox-detail" id="inbox-detail-pane">
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:12px;padding:40px">
+                  <div style="font-size:48px;opacity:0.3">📬</div>
+                  <div style="font-size:14px;font-weight:600;text-align:center">Select a message to read it</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ USERS ══ -->
+      <div class="section" id="s-users">
+        <div class="page-header"><div class="page-title">User Management</div><div class="page-subtitle">12,481 registered accounts</div></div>
+        <div class="glass" style="padding:16px;margin-bottom:14px;display:flex;gap:10px;align-items:center">
+          <div style="flex:1;display:flex;align-items:center;gap:8px;background:rgba(26,108,246,0.06);border:1.5px solid rgba(26,108,246,0.12);border-radius:9px;padding:8px 13px">
+            <span style="color:var(--text3)">🔍</span>
+            <input type="text" placeholder="Search by name, email or ID…" style="background:none;border:none;outline:none;font-size:13px;color:var(--text);width:100%">
+          </div>
+          <select class="form-select" style="width:auto;font-size:12px"><option>All Roles</option><option>User</option><option>Moderator</option><option>Admin</option></select>
+          <select class="form-select" style="width:auto;font-size:12px"><option>All Status</option><option>Active</option><option>Suspended</option><option>Pending</option></select>
+          <button class="btn-primary" style="font-size:12px;padding:9px 14px" onclick="showToast('User invited','success')">+ Invite User</button>
+        </div>
+        <div class="glass" style="overflow:hidden">
+          <div class="table-wrap">
+            <table><thead><tr><th><input type="checkbox"></th><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Scans</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"></tbody></table>
+          </div>
+          <div style="padding:11px 15px;border-top:1px solid rgba(26,108,246,0.08);display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:12px;color:var(--text3)">Showing <b>1–10</b> of <b>12,481</b></div>
+            <div class="pagination"><button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><button class="page-btn">›</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ USER REPORTS ══ -->
+      <div class="section" id="s-reports">
+        <div class="page-header"><div class="page-title">User Reports</div><div class="page-subtitle">User-submitted scam reports awaiting review</div></div>
+        <div class="filter-row">
+          <div class="filter-chip active" onclick="filterChip(this)" id="chip-reports-all">All (—)</div>
+          <div class="filter-chip" onclick="filterChip(this)" id="chip-reports-pending">⏳ Pending (—)</div>
+          <div class="filter-chip" onclick="filterChip(this)" id="chip-reports-review">👁️ Under Review (—)</div>
+          <div class="filter-chip" onclick="filterChip(this)" id="chip-reports-resolved">✅ Resolved (—)</div>
+          <div class="filter-chip" onclick="filterChip(this)" id="chip-reports-dismissed">❌ Dismissed (—)</div>
+          <button class="btn-outline" style="margin-left:auto;font-size:12px" onclick="showToast('Exported','success')">⬇ Export CSV</button>
+        </div>
+        <div class="glass" style="overflow:hidden">
+          <div class="table-wrap">
+            <table><thead><tr><th>Report ID</th><th>Reporter</th><th>Category</th><th>Risk</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
+            <tbody id="reports-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SCAN LOGS ══ -->
+      <div class="section" id="s-scans">
+        <div class="page-header"><div class="page-title">Scan Logs</div><div class="page-subtitle">Real-time and historical platform scans</div></div>
+        <div class="glass" style="overflow:hidden">
+          <div class="table-wrap">
+            <table><thead><tr><th>Scan ID</th><th>User</th><th>Type</th><th>Result</th><th>Confidence</th><th>Duration</th><th>Time</th><th></th></tr></thead>
+            <tbody id="scans-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ THREATS ══ -->
+      <div class="section" id="s-threats">
+        <div class="page-header"><div class="page-title">Threat Library</div><div class="page-subtitle">Known scam patterns and detection signatures</div></div>
+        <div class="alert-banner warn anim-fadeUp"><span>⚠️</span><span><b>8 unreviewed threats</b> require classification.</span></div>
+        <div class="filter-row" style="margin-bottom:14px">
+          <div class="filter-chip active" onclick="filterChip(this)">All</div>
+          <div class="filter-chip" onclick="filterChip(this)" id="chip-threats-new">🆕 New (—)</div>
+          <div class="filter-chip" onclick="filterChip(this)">🔴 Active</div>
+          <div class="filter-chip" onclick="filterChip(this)">🟡 Monitoring</div>
+          <button class="btn-primary" style="margin-left:auto;font-size:12px;padding:8px 14px" onclick="showToast('New threat added','success')">+ Add Threat</button>
+        </div>
+        <div class="glass" style="overflow:hidden">
+          <div class="table-wrap">
+            <table><thead><tr><th>Signature</th><th>Threat Name</th><th>Category</th><th>Severity</th><th>Reports</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead>
+            <tbody id="threats-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ MODERATION ══ -->
+      <div class="section" id="s-moderation">
+        <div class="page-header"><div class="page-title">Moderation</div><div class="page-subtitle">Content flags and community reports</div></div>
+        <div class="two-col">
+          <div class="glass" style="padding:20px">
+            <div class="section-header"><div class="section-title">Flagged Content Queue</div><span class="badge badge-danger">23 Pending</span></div>
+            <div id="moderation-queue"></div>
+          </div>
+          <div class="glass" style="padding:20px">
+            <div class="section-title" style="margin-bottom:12px">Moderation Rules</div>
+            <div id="mod-rules"></div>
+            <div class="divider"></div>
+            <div class="section-title" style="margin-bottom:10px">Banned Keywords</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px" id="banned-keywords"></div>
+            <div style="margin-top:10px;display:flex;gap:8px">
+              <input class="form-input" id="new-keyword" placeholder="Add keyword…" style="flex:1;font-size:12.5px">
+              <button class="btn-primary" onclick="addKeyword()" style="font-size:12px;padding:9px 13px">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SETTINGS ══ -->
+      <div class="section" id="s-settings">
+        <div class="page-header"><div class="page-title">System Settings</div><div class="page-subtitle">Platform configuration and admin preferences</div></div>
+        <div class="two-col" style="align-items:start">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="glass" style="padding:22px">
+              <div class="section-title" style="margin-bottom:14px">🤖 Detection Engine</div>
+              <div class="form-group"><label class="form-label">AI Model</label><select class="form-select"><option>ScamShield v4.2 (Latest)</option><option>ScamShield v4.1</option></select></div>
+              <div class="form-group"><label class="form-label">Sensitivity</label><select class="form-select"><option>High</option><option>Medium</option><option>Low</option></select></div>
+              <div class="form-group"><label class="form-label">Confidence Threshold (%)</label><input class="form-input" type="number" value="75"></div>
+              <div id="engine-settings"></div>
+              <button class="btn-primary" onclick="showToast('Settings saved','success')" style="margin-top:6px">Save</button>
+            </div>
+            <div class="glass" style="padding:22px">
+              <div class="section-title" style="margin-bottom:14px">🔑 API Configuration</div>
+              <div class="form-group"><label class="form-label">API Key</label><div style="display:flex;gap:8px"><input class="form-input" type="password" value="sk-shield-live-xxxx" style="flex:1"><button class="btn-outline" style="font-size:12px" onclick="showToast('Copied','success')">Copy</button></div></div>
+              <div class="form-group"><label class="form-label">Rate Limit (req/min)</label><input class="form-input" type="number" value="500"></div>
+              <button class="btn-primary" onclick="showToast('API settings saved','success')">Save</button>
+            </div>
+          </div>
+          <div>
+            <div class="glass" style="padding:22px;margin-bottom:14px">
+              <div class="section-title" style="margin-bottom:12px">📧 Notifications</div>
+              <div class="form-group"><label class="form-label">Alert Email</label><input class="form-input" value="admin@scamshield.com" type="email"></div>
+              <div id="notif-settings"></div>
+              <button class="btn-primary" onclick="showToast('Saved','success')" style="margin-top:6px">Save</button>
+            </div>
+            <div style="background:rgba(229,56,42,0.04);border:1.5px solid rgba(229,56,42,0.2);border-radius:var(--radius);padding:22px">
+              <div class="section-title" style="color:var(--danger);margin-bottom:4px">⚠️ Danger Zone</div>
+              <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Irreversible actions. Proceed with caution.</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:white;border-radius:9px;border:1px solid rgba(229,56,42,0.15)"><div><div style="font-size:13px;font-weight:700">Flush Scan Logs</div><div style="font-size:11px;color:var(--text3)">Delete logs older than 90 days</div></div><button class="btn-danger" style="font-size:12px;padding:7px 13px" onclick="showToast('Logs flushed','danger')">Flush</button></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:white;border-radius:9px;border:1px solid rgba(229,56,42,0.15)"><div><div style="font-size:13px;font-weight:700">Disable Platform</div><div style="font-size:11px;color:var(--text3)">Take ScamShield offline immediately</div></div><button class="btn-danger" style="font-size:12px;padding:7px 13px" onclick="showToast('Platform disabled!','danger')">Disable</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ AUDIT LOG ══ -->
+      <div class="section" id="s-audit">
+        <div class="page-header"><div class="page-title">Audit Log</div><div class="page-subtitle">All admin actions and system events</div></div>
+        <div class="glass" style="overflow:hidden">
+          <div class="table-wrap">
+            <table><thead><tr><th>Timestamp</th><th>Admin</th><th>Action</th><th>Target</th><th>IP Address</th><th>Severity</th></tr></thead>
+            <tbody id="audit-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end content -->
+  </main>
+</div>
+
+<!-- MODAL: Message Reply -->
+<div class="modal-overlay" id="reply-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('reply-modal')">✕</button>
+    <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:3px">Reply to Message</div>
+    <div style="font-size:12.5px;color:var(--text3);margin-bottom:18px" id="reply-modal-sub">Replying to: …</div>
+    <div class="form-group"><label class="form-label">To</label><input class="form-input" id="reply-to" readonly style="background:rgba(26,108,246,0.04)"></div>
+    <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="reply-subject"></div>
+    <div class="form-group"><label class="form-label">Message</label><textarea class="form-input" id="reply-body" rows="5" placeholder="Type your reply…" style="resize:vertical"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+      <button class="btn-outline" onclick="closeModal('reply-modal')">Cancel</button>
+      <button class="btn-primary" onclick="sendReply()">Send Reply ✈️</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ══════════════════════════════════
+// LOGIN GATE
+// ══════════════════════════════════
+var currentAdmin = null;
+
+function toggleLoginPass(btn) {
+  var inp = document.getElementById('admin-pass');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+}
+
+function doLogin() {
+  var id   = document.getElementById('admin-id').value.trim();
+  var pass = document.getElementById('admin-pass').value;
+  var err  = document.getElementById('login-error');
+  var errMsg = document.getElementById('login-error-msg');
+
+  document.getElementById('admin-id').classList.remove('error');
+  document.getElementById('admin-pass').classList.remove('error');
+  err.classList.remove('show');
+
+  if (!id) {
+    document.getElementById('admin-id').classList.add('error');
+    errMsg.textContent = 'Please enter an Admin ID.';
+    err.classList.add('show');
+    return;
+  }
+  if (!pass) {
+    document.getElementById('admin-pass').classList.add('error');
+    errMsg.textContent = 'Please enter a password.';
+    err.classList.add('show');
+    return;
+  }
+
+  // Mock login — accepts any non-empty ID and password
+  var displayName = id.includes(' ') ? id : 'Admin (' + id + ')';
+  currentAdmin = { id: id.toUpperCase(), name: displayName, role: 'Administrator' };
+  document.getElementById('login-gate').classList.add('hidden');
+  document.getElementById('app-shell').classList.add('visible');
+
+  // Update UI with admin info
+  document.getElementById('sidebar-avatar').textContent = currentAdmin.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  document.getElementById('topbar-avatar').textContent  = currentAdmin.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  document.getElementById('sidebar-name').textContent   = currentAdmin.name;
+  document.getElementById('sidebar-id-display').textContent = 'ID: ' + currentAdmin.id;
+  document.getElementById('topbar-name').textContent    = currentAdmin.name;
+
+  initApp();
+  showToast('Welcome back, ' + currentAdmin.name + '!', 'success');
+}
+
+function doLogout() {
+  if (!confirm('Sign out of the admin panel?')) return;
+  document.getElementById('app-shell').classList.remove('visible');
+  document.getElementById('login-gate').classList.remove('hidden');
+  document.getElementById('admin-id').value = '';
+  document.getElementById('admin-pass').value = '';
+  currentAdmin = null;
+  showToast('Signed out successfully', 'info');
+}
+
+// ══════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  var titles = {dashboard:'Dashboard Overview',analytics:'Analytics',inbox:'Inbox & Messages',users:'User Management',reports:'User Reports',scans:'Scan Logs',threats:'Threat Library',moderation:'Moderation',settings:'System Settings',audit:'Audit Log'};
+  document.getElementById('topbar-title').textContent = titles[id] || id;
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+
+function showToast(msg, type) {
+  type = type || 'info';
+  var C = {success:['#22b573','rgba(34,181,115,0.1)'],danger:['#e5382a','rgba(229,56,42,0.1)'],warn:['#f5a623','rgba(245,166,35,0.1)'],info:['#1a6cf6','rgba(26,108,246,0.1)']};
+  var I = {success:'✓',danger:'!',warn:'⚠',info:'i'};
+  var c = C[type]||C.info;
+  var t = document.createElement('div');
+  t.style.cssText = 'background:'+c[1]+';border:1.5px solid '+c[0]+'40;backdrop-filter:blur(16px);border-radius:12px;padding:11px 15px;max-width:300px;display:flex;align-items:center;gap:9px;box-shadow:0 8px 28px rgba(0,0,0,0.12);pointer-events:all;animation:fadeUp 0.3s ease';
+  t.innerHTML = '<span style="font-size:14px;font-weight:800;color:'+c[0]+'">'+I[type]+'</span><span style="font-size:12.5px;font-weight:600;color:'+c[0]+';line-height:1.4">'+msg+'</span>';
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300); },3000);
+}
+
+function refreshData(btn) { btn.style.animation='spin 0.8s linear'; setTimeout(()=>{ btn.style.animation='';showToast('Data refreshed','success'); },800); }
+function filterChip(el) { el.closest('div').querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); }
+
+// ══════════════════════════════════
+// INBOX DATA & LOGIC
+// ══════════════════════════════════
+var inboxMessages = [
+  {id:1,type:'contact',category:'General',from:'Amina Odhiambo',email:'amina.o@gmail.com',subject:'Unable to scan WhatsApp messages',preview:'Hi, I\'ve been trying to use the WhatsApp scan feature but it keeps showing an error…',body:'Hi ScamShield Team,\n\nI\'ve been trying to use the WhatsApp scan feature for the past 2 days but it keeps showing an error message: "Scan failed — please try again." I\'ve reinstalled the app and cleared cache but the issue persists.\n\nMy account: amina.o@gmail.com\nDevice: Samsung Galaxy A53\nApp version: 4.1.2\n\nPlease help urgently as I keep getting suspicious messages.\n\nThanks,\nAmina',time:'10:32 AM',date:'Today',unread:true,priority:'Normal',status:'Pending'},
+  {id:2,type:'report',category:'Scam Report',from:'Brian Kiprotich',email:'brian.k@outlook.com',subject:'🚨 M-PESA Fraud — URGENT',preview:'I just received a call from someone pretending to be a Safaricom agent asking for my PIN…',body:'URGENT — I just received a call from +254 7XX XXX where someone claimed to be a Safaricom customer care agent. They asked me to "confirm" my M-PESA PIN to "re-activate" my account.\n\nI almost gave it but noticed the number was not an official Safaricom line. The caller was very convincing and used my real name.\n\nScammer number: +254 700 XXX XXX\nTime: 9:45 AM today\nMethod: Phone call\n\nPlease add this to your threat database immediately and warn other users.\n\nBrian Kiprotich',time:'09:51 AM',date:'Today',unread:true,priority:'Urgent',status:'Pending'},
+  {id:3,type:'support',category:'Support',from:'Grace Njeri',email:'grace.n@gmail.com',subject:'Account locked after too many attempts',preview:'My account has been locked and I cannot log in. I need urgent help to recover access…',body:'Hello,\n\nMy account was locked after I forgot my password and tried too many times. I cannot receive the password reset email either (it might be going to spam or the wrong address).\n\nOriginal email: grace.n@gmail.com\nAlternate email: gracewairimu94@yahoo.com\n\nThis is urgent as I need the app for safety while travelling. Please help me recover my account.\n\nKind regards,\nGrace',time:'Yesterday',date:'Mar 9',unread:true,priority:'High',status:'Pending'},
+  {id:4,type:'feedback',category:'Feedback',from:'Hassan Abdi',email:'hassan.a@gmail.com',subject:'Great app! Feature suggestion',preview:'I\'ve been using ScamShield for 3 months and it\'s been amazing. I wanted to suggest a feature…',body:'Hello ScamShield Team,\n\nFirst off, huge thanks — your app has saved me from at least 3 phishing attempts already!\n\nI wanted to suggest a feature: a "Share Alert" button that lets me forward a scam warning directly to my contacts on WhatsApp with one tap. This would help protect family members who might not have the app yet.\n\nAlso, would love a dark mode option.\n\nKeep up the great work!\n\nHassan Abdi\nNairobi',time:'Yesterday',date:'Mar 9',unread:false,priority:'Normal',status:'Read'},
+  {id:5,type:'contact',category:'Billing',from:'Irene Chebet',email:'irene.c@outlook.com',subject:'Charged twice for Pro subscription',preview:'I noticed two identical charges of KES 1,200 on my M-PESA statement for ScamShield Pro…',body:'Hi,\n\nI was just reviewing my M-PESA statement and noticed two charges of KES 1,200 on March 7th at 14:32 and 14:33 — both from ScamShield. It appears I was charged twice for my monthly Pro subscription.\n\nTransaction references:\n- QJK2309XXX — KES 1,200\n- QJK2310XXX — KES 1,200\n\nPlease refund the duplicate charge to my M-PESA +254 7XX XXX XXX.\n\nThank you,\nIrene Chebet',time:'Mar 8',date:'Mar 8',unread:true,priority:'High',status:'Pending'},
+  {id:6,type:'report',category:'Scam Report',from:'James Mutua',email:'james.m@gmail.com',subject:'Fake crypto investment WhatsApp group',preview:'There is a WhatsApp group called "Binance Kenya Official" that is scamming people…',body:'Hi Team,\n\nI want to report a WhatsApp group called "Binance Kenya Official" that is actively scamming people. They claim to offer guaranteed 200% returns in 48 hours for Bitcoin investments.\n\nI joined to investigate and they asked members to send KES 5,000 minimum to a personal M-PESA number (not a business). When people ask for withdrawals, they are blocked.\n\nGroup admin numbers:\n- +254 712 XXX XXX\n- +254 798 XXX XXX\n\nPlease add these to your blocked list and alert users.\n\nJames Mutua\nModerator, Nairobi Cybersecurity Group',time:'Mar 8',date:'Mar 8',unread:true,priority:'Urgent',status:'Pending'},
+  {id:7,type:'contact',category:'Technical',from:'Esther Wairimu',email:'esther.w@gmail.com',subject:'Scan results not saving to history',preview:'Every time I close the app my scan history disappears. This has been happening since the last update…',body:'Hello Support,\n\nSince the update to version 4.1.2 (released March 5th), my scan history no longer persists when I close and reopen the app. Each time I reopen ScamShield, the history tab is completely empty.\n\nI have tried:\n- Clearing app cache\n- Reinstalling\n- Logging out and back in\n\nNothing works. This is frustrating as I used to use the history to report scams later.\n\nPlease fix this bug urgently.\n\nDevice: iPhone 14\niOS: 17.3.1\nApp: ScamShield 4.1.2\n\nEsther',time:'Mar 7',date:'Mar 7',unread:false,priority:'Normal',status:'Read'},
+  {id:8,type:'support',category:'Support',from:'David Njoroge',email:'david.n@hotmail.com',subject:'Account wrongly suspended — appeal',preview:'My account was suspended yesterday but I have done nothing wrong. I am appealing this decision…',body:'Dear ScamShield Admin,\n\nMy account (david.njoroge@hotmail.com) was suspended yesterday with the message "Suspicious activity detected." I believe this is an error.\n\nI have been a ScamShield user for 8 months and only use the app legitimately to protect myself. I did scan 12 messages in one hour yesterday (I was helping my elderly mother check her messages), which may have triggered an auto-flag.\n\nI request that you review my account activity and reinstate my access. I am willing to provide any verification needed.\n\nDavid Njoroge\nID: USR-00492',time:'Mar 7',date:'Mar 7',unread:false,priority:'High',status:'Under Review'},
+  {id:9,type:'feedback',category:'Feedback',from:'Cynthia Mwangi',email:'cynthia.m@yahoo.com',subject:'Suggestion: Community Scam Map',preview:'I think it would be great to have a map showing scam hotspots in Kenya so people can stay informed…',body:'Hi ScamShield,\n\nI have a product suggestion: a Community Scam Map for Kenya. The idea would be a heatmap showing where reported scams are most concentrated (by county/region), updated in real time from user reports.\n\nThis could be really powerful for:\n- Journalists writing about fraud trends\n- Banks and financial institutions\n- Law enforcement\n- Ordinary users knowing which areas to be careful in\n\nI know this is a big ask but I think it would set ScamShield apart from any other app.\n\nCynthia Mwangi\nNairobi',time:'Mar 6',date:'Mar 6',unread:false,priority:'Normal',status:'Read'},
+  {id:10,type:'contact',category:'General',from:'Francis Otieno',email:'francis.o@proton.me',subject:'Media inquiry — scam statistics',preview:'I am a journalist at Nation Media Group writing a piece on digital fraud in Kenya. I would like to request…',body:'Hello,\n\nMy name is Francis Otieno and I am a journalist at Nation Media Group working on an investigative piece about the rise of digital fraud in Kenya.\n\nI would like to request:\n1. Access to your anonymised scam statistics for Q1 2025\n2. A brief interview with a ScamShield representative\n3. Permission to reference ScamShield detection data in the article\n\nDeadline: March 15, 2025\n\nContact: francis.otieno@nation.co.ke | +254 722 XXX XXX\n\nThank you,\nFrancis Otieno',time:'Mar 5',date:'Mar 5',unread:false,priority:'Normal',status:'Read'},
+  {id:11,type:'support',category:'Support',from:'Ruth Kamau',email:'ruth.k@gmail.com',subject:'URGENT: Sent money to scammer — need help',preview:'I just realised I sent KES 15,000 to a scammer. I scanned the message after sending. What do I do…',body:'PLEASE HELP — URGENT\n\nI just realised I may have been scammed. I sent KES 15,000 via M-PESA to someone who told me they were selling a second-hand laptop on Facebook Marketplace.\n\nAfter sending, I scanned their original message and got a HIGH RISK warning. I panicked and am not sure what to do.\n\nTransaction: sent to +254 7XX XXX at 11:14 AM today\nAmount: KES 15,000\nReference: QJL3XXX\n\nI have already called Safaricom but they said to contact the police and whoever I paid.\n\nWhat are my next steps? Please help me.\n\nRuth Kamau',time:'11:22 AM',date:'Today',unread:true,priority:'Urgent',status:'Pending'},
+  {id:12,type:'report',category:'Scam Report',from:'Anonymous',email:'anonymous@proton.me',subject:'Government impersonation — KRA refund scam',preview:'Someone is sending SMS pretending to be KRA offering a "tax refund" of KES 12,000…',body:'Hi,\n\nI am reporting a bulk SMS scam pretending to be the Kenya Revenue Authority (KRA).\n\nMessage text: "Dear taxpayer, you are eligible for a KES 12,450 tax refund. Click: http://kra-refund-portal.xyz/claim to receive your refund within 24 hours. — KRA"\n\nThe URL is clearly fake. The real KRA website is kra.go.ke.\n\nI have received this twice from different numbers:\n- +254 746 XXX XXX  \n- +254 769 XXX XXX\n\nPlease add this pattern to your detection database urgently.\n\nAnonymous (for safety)',time:'Mar 4',date:'Mar 4',unread:false,priority:'High',status:'Read'},
+];
+
+var currentFolderFilter = 'all';
+var selectedMessageId = null;
+
+function switchInboxFolder(folder, el) {
+  document.querySelectorAll('.inbox-folder').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  currentFolderFilter = folder;
+  renderInboxList(inboxMessages);
+  document.getElementById('inbox-detail-pane').innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:12px;padding:40px"><div style="font-size:48px;opacity:0.3">📬</div><div style="font-size:14px;font-weight:600;text-align:center">Select a message to read it</div></div>';
+}
+
+function filterInbox(q) {
+  var filtered = inboxMessages.filter(m => !q || m.from.toLowerCase().includes(q.toLowerCase()) || m.subject.toLowerCase().includes(q.toLowerCase()) || m.preview.toLowerCase().includes(q.toLowerCase()));
+  renderInboxList(filtered);
+}
+
+function filterInboxType(type) {
+  var filtered = !type ? inboxMessages : inboxMessages.filter(m => m.type === type);
+  renderInboxList(filtered);
+}
+
+function renderInboxList(messages) {
+  var folderMap = {all:null,contact:'contact',reports:'report',feedback:'feedback',support:'support',notifs:'notif',resolved:'resolved',billing:'billing',technical:'technical',general:'general'};
+  var typeFilter = folderMap[currentFolderFilter];
+  var filtered = !typeFilter ? messages : messages.filter(m => m.type === typeFilter || m.category.toLowerCase() === typeFilter);
+
+  var typeIcons = {contact:'✉️',report:'🚨',feedback:'💬',support:'🆘',notif:'🔔'};
+  var priorityColors = {Urgent:'var(--danger)',High:'var(--warning)',Normal:'var(--text3)'};
+
+  document.getElementById('inbox-messages-list').innerHTML = filtered.map(m =>
+    '<div class="inbox-item '+(m.unread?'unread':'')+(selectedMessageId===m.id?' selected':'')+'" onclick="openInboxMessage('+m.id+')">' +
+    '<div class="inbox-dot '+(m.unread?'':'read')+'"></div>' +
+    '<div style="flex:1;min-width:0">' +
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">' +
+        '<span style="font-size:12px">'+(typeIcons[m.type]||'📩')+'</span>' +
+        '<span class="inbox-sender">'+m.from+'</span>' +
+        (m.priority!=='Normal'?'<span style="font-size:9.5px;font-weight:800;color:'+priorityColors[m.priority]+';border:1px solid '+priorityColors[m.priority]+'40;border-radius:4px;padding:1px 5px">'+m.priority+'</span>':'') +
+      '</div>' +
+      '<div class="inbox-subject">'+m.subject+'</div>' +
+      '<div class="inbox-preview">'+m.preview+'</div>' +
+    '</div>' +
+    '<div class="inbox-meta"><div class="inbox-time">'+m.time+'</div><span class="badge '+(m.unread?'badge-info':'badge-neutral')+'" style="font-size:9.5px;margin-top:4px">'+(m.unread?'Unread':'Read')+'</span></div>' +
+    '</div>'
+  ).join('') || '<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px">No messages in this folder</div>';
+}
+
+function openInboxMessage(id) {
+  selectedMessageId = id;
+  var m = inboxMessages.find(x => x.id === id);
+  if (!m) return;
+  m.unread = false;
+  renderInboxList(inboxMessages);
+
+  var priorityColors = {Urgent:'var(--danger)',High:'var(--warning)',Normal:'var(--success)'};
+  var typeIcons = {contact:'✉️',report:'🚨',feedback:'💬',support:'🆘'};
+  var statusBadge = m.status==='Pending'?'badge-warn':m.status==='Under Review'?'badge-info':m.status==='Resolved'?'badge-success':'badge-neutral';
+
+  var pane = document.getElementById('inbox-detail-pane');
+  pane.classList.add('visible');
+  pane.innerHTML =
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">' +
+      '<div>' +
+        '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">'+(typeIcons[m.type]||'📩')+' '+m.category+' · '+m.date+'</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-0.3px">'+m.subject+'</div>' +
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+          '<span style="font-size:12.5px;color:var(--text2);font-weight:600">From: <span style="color:var(--primary)">'+m.from+'</span></span>' +
+          '<span style="font-size:11.5px;color:var(--text3)">'+m.email+'</span>' +
+          '<span class="badge '+statusBadge+'">'+m.status+'</span>' +
+          '<span style="font-size:11px;font-weight:800;color:'+priorityColors[m.priority]+';background:'+priorityColors[m.priority]+'15;border:1px solid '+priorityColors[m.priority]+'30;border-radius:6px;padding:2px 8px">'+m.priority+' Priority</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:7px;flex-shrink:0">' +
+        '<button class="btn-primary" style="font-size:12px;padding:8px 13px" onclick="startReply('+m.id+')">↩ Reply</button>' +
+        '<button class="btn-success" style="font-size:12px;padding:8px 13px" onclick="resolveMessage('+m.id+')">✓ Resolve</button>' +
+        '<button class="btn-danger" style="font-size:12px;padding:8px 13px" onclick="archiveMessage('+m.id+')">🗑</button>' +
+      '</div>' +
+    '</div>' +
+    '<div style="background:rgba(26,108,246,0.03);border:1.5px solid rgba(26,108,246,0.08);border-radius:12px;padding:18px;flex:1">' +
+      '<pre style="font-family:\'Plus Jakarta Sans\',sans-serif;font-size:13.5px;color:var(--text2);line-height:1.75;white-space:pre-wrap;word-break:break-word">'+m.body+'</pre>' +
+    '</div>' +
+    '<div style="margin-top:14px;padding-top:14px;border-top:1.5px solid rgba(26,108,246,0.08);display:flex;align-items:center;gap:10px">' +
+      '<input class="form-input" placeholder="Quick reply…" id="quick-reply-'+m.id+'" style="flex:1;font-size:13px" onkeydown="if(event.key===\'Enter\')sendQuickReply('+m.id+')">' +
+      '<button class="btn-primary" style="font-size:12px;padding:9px 14px" onclick="sendQuickReply('+m.id+')">Send</button>' +
+    '</div>';
+
+  // Update inbox badge
+  var unreadCount = inboxMessages.filter(x => x.unread).length;
+  document.getElementById('inbox-badge').textContent = unreadCount || '';
+  document.getElementById('inbox-badge').style.display = unreadCount ? '' : 'none';
+}
+
+function startReply(id) {
+  var m = inboxMessages.find(x => x.id === id);
+  document.getElementById('reply-to').value = m.email;
+  document.getElementById('reply-subject').value = 'Re: ' + m.subject;
+  document.getElementById('reply-body').value = '\n\n---\nOriginal message from ' + m.from + ' on ' + m.date + ':\n"' + m.preview + '"';
+  document.getElementById('reply-modal-sub').textContent = 'Replying to: ' + m.from + ' <' + m.email + '>';
+  openModal('reply-modal');
+}
+
+function sendReply() {
+  closeModal('reply-modal');
+  showToast('Reply sent successfully ✈️', 'success');
+}
+
+function sendQuickReply(id) {
+  var inp = document.getElementById('quick-reply-' + id);
+  if (!inp || !inp.value.trim()) return;
+  inp.value = '';
+  showToast('Quick reply sent', 'success');
+}
+
+function resolveMessage(id) {
+  var m = inboxMessages.find(x => x.id === id);
+  if (m) m.status = 'Resolved';
+  renderInboxList(inboxMessages);
+  openInboxMessage(id);
+  showToast('Message marked as resolved', 'success');
+}
+
+function archiveMessage(id) {
+  inboxMessages = inboxMessages.filter(x => x.id !== id);
+  renderInboxList(inboxMessages);
+  document.getElementById('inbox-detail-pane').innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:12px;padding:40px"><div style="font-size:48px;opacity:0.3">📬</div><div style="font-size:14px;font-weight:600">Message archived</div></div>';
+  showToast('Message archived', 'warn');
+}
+
+// ══════════════════════════════════
+// TABLE DATA
+// ══════════════════════════════════
+var aColors = ['#1a6cf6','#00c2a8','#e5382a','#f5a623','#22b573','#8b5cf6','#ec4899'];
+function rColor(i) { return aColors[i%aColors.length]; }
+function inits(n) { return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+
+var usersData = [
+  {name:'Amina Odhiambo',email:'amina.o@gmail.com',role:'User',status:'Active',scans:142,joined:'Jan 14, 2025'},
+  {name:'Brian Kiprotich',email:'brian.k@outlook.com',role:'User',status:'Active',scans:87,joined:'Feb 2, 2025'},
+  {name:'Cynthia Mwangi',email:'cynthia.m@yahoo.com',role:'Moderator',status:'Active',scans:523,joined:'Oct 8, 2024'},
+  {name:'David Njoroge',email:'david.n@hotmail.com',role:'User',status:'Suspended',scans:3,joined:'Mar 1, 2025'},
+  {name:'Esther Wairimu',email:'esther.w@gmail.com',role:'User',status:'Active',scans:211,joined:'Nov 22, 2024'},
+  {name:'Francis Otieno',email:'francis.o@proton.me',role:'Admin',status:'Active',scans:1847,joined:'Jun 5, 2024'},
+  {name:'Grace Njeri',email:'grace.n@gmail.com',role:'User',status:'Pending',scans:0,joined:'Mar 9, 2025'},
+  {name:'Hassan Abdi',email:'hassan.a@gmail.com',role:'User',status:'Active',scans:64,joined:'Jan 30, 2025'},
+  {name:'Irene Chebet',email:'irene.c@outlook.com',role:'User',status:'Active',scans:189,joined:'Dec 12, 2024'},
+  {name:'James Mutua',email:'james.m@gmail.com',role:'Moderator',status:'Active',scans:402,joined:'Sep 3, 2024'},
+];
+function buildUsers() {
+  document.getElementById('users-tbody').innerHTML = usersData.map((u,i) => {
+    var sB = u.status==='Active'?'badge-success':u.status==='Suspended'?'badge-danger':'badge-warn';
+    var rB = u.role==='Admin'?'badge-danger':u.role==='Moderator'?'badge-info':'badge-neutral';
+    return '<tr><td><input type="checkbox"></td><td><div style="display:flex;align-items:center;gap:9px"><div class="user-avatar" style="background:'+rColor(i)+'">'+inits(u.name)+'</div><div style="font-weight:700;font-size:12.5px">'+u.name+'</div></div></td><td class="td-mono">'+u.email+'</td><td><span class="badge '+rB+'">'+u.role+'</span></td><td><span class="badge '+sB+'">'+u.status+'</span></td><td class="td-mono">'+u.scans.toLocaleString()+'</td><td style="font-size:11.5px;color:var(--text3)">'+u.joined+'</td><td><div class="row-actions"><button class="action-btn view" onclick="showToast(\'Viewing '+u.name+'\',\'info\')">👁️</button><button class="action-btn edit" onclick="showToast(\'Editing...\',\'info\')">✏️</button><button class="action-btn del" onclick="showToast(\''+u.name+' suspended\',\'danger\')">🚫</button></div></td></tr>';
+  }).join('');
+}
+
+var reportsData = [
+  {id:'RPT-0841',reporter:'Amina O.',cat:'Investment Fraud',risk:'High',status:'Pending',date:'Mar 10'},
+  {id:'RPT-0840',reporter:'Brian K.',cat:'Phishing',risk:'Critical',status:'Under Review',date:'Mar 10'},
+  {id:'RPT-0839',reporter:'Grace N.',cat:'Romance Scam',risk:'Medium',status:'Pending',date:'Mar 9'},
+  {id:'RPT-0838',reporter:'Hassan A.',cat:'Lottery Scam',risk:'Low',status:'Resolved',date:'Mar 9'},
+  {id:'RPT-0837',reporter:'Irene C.',cat:'Phishing',risk:'High',status:'Pending',date:'Mar 9'},
+  {id:'RPT-0836',reporter:'James M.',cat:'Employment Scam',risk:'Medium',status:'Dismissed',date:'Mar 8'},
+  {id:'RPT-0835',reporter:'Esther W.',cat:'Crypto Fraud',risk:'Critical',status:'Under Review',date:'Mar 8'},
+];
+function buildReports() {
+  function rB(r){return r==='Critical'?'badge-danger':r==='High'?'badge-warn':r==='Medium'?'badge-info':'badge-neutral';}
+  function sB(s){return s==='Pending'?'badge-warn':s==='Under Review'?'badge-info':s==='Resolved'?'badge-success':'badge-neutral';}
+  document.getElementById('reports-tbody').innerHTML = reportsData.map(r =>
+    '<tr><td class="td-mono">'+r.id+'</td><td style="font-weight:600">'+r.reporter+'</td><td>'+r.cat+'</td><td><span class="badge '+rB(r.risk)+'">'+r.risk+'</span></td><td><span class="badge '+sB(r.status)+'">'+r.status+'</span></td><td style="font-size:11.5px;color:var(--text3)">'+r.date+'</td><td><div class="row-actions"><button class="action-btn view" onclick="showToast(\'Viewing '+r.id+'\',\'info\')">👁️</button><button class="action-btn ok" onclick="showToast(\'Resolved\',\'success\')">✓</button><button class="action-btn del" onclick="showToast(\'Dismissed\',\'warn\')">✕</button></div></td></tr>'
+  ).join('');
+}
+
+var scansData = [
+  {id:'SCN-99821',user:'amina.o',type:'SMS',result:'Scam',conf:96.2,dur:'1.1s',ts:'10:47:22'},
+  {id:'SCN-99820',user:'brian.k',type:'WhatsApp',result:'Safe',conf:99.1,dur:'0.9s',ts:'10:46:55'},
+  {id:'SCN-99819',user:'grace.n',type:'Email',result:'Scam',conf:88.4,dur:'1.4s',ts:'10:46:31'},
+  {id:'SCN-99818',user:'hassan.a',type:'URL',result:'Safe',conf:97.8,dur:'0.7s',ts:'10:46:02'},
+  {id:'SCN-99817',user:'james.m',type:'SMS',result:'Scam',conf:72.1,dur:'1.2s',ts:'10:45:40'},
+  {id:'SCN-99816',user:'irene.c',type:'WhatsApp',result:'Safe',conf:95.6,dur:'0.8s',ts:'10:45:12'},
+  {id:'SCN-99815',user:'esther.w',type:'Email',result:'Unknown',conf:51.3,dur:'2.1s',ts:'10:44:58'},
+];
+function buildScans() {
+  function rB(r){return r==='Scam'?'badge-danger':r==='Safe'?'badge-success':'badge-warn';}
+  document.getElementById('scans-tbody').innerHTML = scansData.map(s =>
+    '<tr><td class="td-mono">'+s.id+'</td><td class="td-mono">'+s.user+'</td><td><span class="badge badge-info">'+s.type+'</span></td><td><span class="badge '+rB(s.result)+'">'+s.result+'</span></td><td><div style="display:flex;align-items:center;gap:7px"><div class="progress-wrap" style="width:55px"><div class="progress-fill" style="width:'+s.conf+'%;background:'+(s.conf>90?'var(--success)':s.conf>70?'var(--warning)':'var(--danger)')+'"></div></div><span class="td-mono">'+s.conf+'%</span></div></td><td class="td-mono">'+s.dur+'</td><td class="td-mono">'+s.ts+'</td><td><button class="action-btn view" onclick="showToast(\'Viewing scan '+s.id+'\',\'info\')">👁️</button></td></tr>'
+  ).join('');
+}
+
+var threatsData = [
+  {id:'PHISH-0082',name:'KE Safaricom M-PESA Impersonation',cat:'Phishing',sev:'Critical',reports:3412,status:'Active',updated:'Mar 10'},
+  {id:'INVEST-0041',name:'Fake Crypto Investment (WhatsApp)',cat:'Investment Fraud',sev:'High',reports:1247,status:'Active',updated:'Mar 9'},
+  {id:'ROM-0019',name:'Military Romance Scam Pattern',cat:'Romance Scam',sev:'High',reports:892,status:'Active',updated:'Mar 8'},
+  {id:'LOT-0007',name:'KRA Tax Refund Scam (SMS)',cat:'Gov Impersonation',sev:'High',reports:388,status:'Active',updated:'Mar 7'},
+  {id:'EMPL-0033',name:'Work-From-Home Data Entry Scam',cat:'Employment',sev:'Medium',reports:441,status:'Monitoring',updated:'Mar 8'},
+  {id:'NEW-0088',name:'Unclassified — SMS Lottery Pattern',cat:'Unknown',sev:'Unknown',reports:14,status:'New',updated:'Mar 10'},
+];
+function buildThreats() {
+  function sB(s){return s==='Critical'?'badge-danger':s==='High'?'badge-warn':s==='Medium'?'badge-info':'badge-neutral';}
+  function stB(s){return s==='Active'?'badge-danger':s==='Monitoring'?'badge-warn':s==='New'?'badge-info':'badge-neutral';}
+  document.getElementById('threats-tbody').innerHTML = threatsData.map(t =>
+    '<tr><td class="td-mono" style="font-size:10.5px">'+t.id+'</td><td style="font-weight:700;font-size:12.5px;max-width:180px">'+t.name+'</td><td style="font-size:12px;color:var(--text3)">'+t.cat+'</td><td><span class="badge '+sB(t.sev)+'">'+t.sev+'</span></td><td class="td-mono">'+t.reports.toLocaleString()+'</td><td><span class="badge '+stB(t.status)+'">'+t.status+'</span></td><td style="font-size:11.5px;color:var(--text3)">'+t.updated+'</td><td><div class="row-actions"><button class="action-btn view" onclick="showToast(\'Viewing threat…\',\'info\')">👁️</button><button class="action-btn edit" onclick="showToast(\'Editing…\',\'info\')">✏️</button><button class="action-btn del" onclick="showToast(\'Threat archived\',\'warn\')">📦</button></div></td></tr>'
+  ).join('');
+}
+
+var activities = [
+  {color:'var(--danger)',msg:'<b>Urgent message</b> received from Ruth Kamau — money sent to scammer',time:'2 min ago'},
+  {color:'var(--warning)',msg:'<b>New contact form</b> from Brian K. — M-PESA fraud report submitted',time:'9 min ago'},
+  {color:'var(--success)',msg:'<b>Report RPT-0838 resolved</b> by Moderator James M.',time:'24 min ago'},
+  {color:'var(--primary)',msg:'<b>Threat DB updated</b> — 23 new patterns imported from community feed',time:'38 min ago'},
+  {color:'var(--success)',msg:'<b>New user registered</b> — Grace Njeri verified email',time:'1 hr ago'},
+];
+function buildActivity() {
+  document.getElementById('activity-feed').innerHTML = activities.map(a =>
+    '<div class="activity-item"><div class="activity-dot" style="background:'+a.color+';box-shadow:0 0 0 3px '+a.color+'20"></div><div><div class="activity-msg">'+a.msg+'</div><div class="activity-time">'+a.time+'</div></div></div>'
+  ).join('');
+}
+
+function buildSystemStatus() {
+  var statuses = [
+    {label:'API Gateway',s:'green',v:'99.98% uptime'},
+    {label:'Detection Engine',s:'green',v:'v4.2 — Healthy'},
+    {label:'Email Service',s:'yellow',v:'Slight latency'},
+    {label:'Scan Queue',s:'green',v:'247 queued'},
+  ];
+  document.getElementById('system-status').innerHTML = statuses.map(s =>
+    '<div class="status-row"><div style="display:flex;align-items:center;gap:8px"><div class="status-dot '+s.s+'"></div><span style="font-size:12.5px;font-weight:600">'+s.label+'</span></div><span style="font-size:11.5px;color:var(--text3)">'+s.v+'</span></div>'
+  ).join('');
+}
+
+var cats = [{name:'Phishing',pct:38,c:'var(--danger)'},{name:'Investment Fraud',pct:27,c:'var(--warning)'},{name:'Romance Scam',pct:14,c:'#8b5cf6'},{name:'Employment',pct:10,c:'var(--primary)'},{name:'Crypto Fraud',pct:7,c:'var(--accent)'},{name:'Other',pct:4,c:'var(--text3)'}];
+function buildCategories() {
+  document.getElementById('scam-categories').innerHTML = cats.map(c =>
+    '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:4px"><span>'+c.name+'</span><span style="color:var(--text3)">'+c.pct+'%</span></div><div class="progress-wrap"><div class="progress-fill" style="width:'+c.pct+'%;background:'+c.c+'"></div></div></div>'
+  ).join('');
+}
+
+var modQueue = [
+  {user:'unknown_92',type:'Spam report',risk:'Medium',time:'4 min ago'},
+  {user:'brian.k',type:'False positive claim',risk:'Low',time:'17 min ago'},
+  {user:'anonymous',type:'Hate speech report',risk:'High',time:'29 min ago'},
+  {user:'esther.w',type:'Phishing URL',risk:'Critical',time:'42 min ago'},
+];
+function buildModerationQueue() {
+  function rc(r){return r==='Critical'?'var(--danger)':r==='High'?'var(--warning)':r==='Medium'?'var(--primary)':'var(--text3)';}
+  document.getElementById('moderation-queue').innerHTML = modQueue.map(m =>
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:11px;background:rgba(26,108,246,0.04);border-radius:9px;margin-bottom:7px;border:1px solid rgba(26,108,246,0.08)"><div><div style="font-size:13px;font-weight:700">'+m.type+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">by <b>'+m.user+'</b> · '+m.time+'</div></div><div style="display:flex;align-items:center;gap:7px"><span style="font-size:10.5px;font-weight:700;color:'+rc(m.risk)+'">'+m.risk+'</span><button class="action-btn ok" onclick="showToast(\'Approved\',\'success\')">✓</button><button class="action-btn del" onclick="showToast(\'Dismissed\',\'warn\')">✕</button></div></div>'
+  ).join('');
+}
+
+var keywords = ['mpesa refund','guaranteed profit','send to receive','urgent bank alert','OTP code'];
+function buildKeywords() {
+  document.getElementById('banned-keywords').innerHTML = keywords.map((k,i) =>
+    '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(229,56,42,0.08);border:1px solid rgba(229,56,42,0.2);border-radius:20px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--danger)">'+k+'<span style="cursor:pointer;font-size:9px" onclick="removeKeyword('+i+')">✕</span></span>'
+  ).join('');
+}
+function addKeyword() {
+  var v = document.getElementById('new-keyword').value.trim();
+  if(!v) return;
+  keywords.push(v);
+  document.getElementById('new-keyword').value='';
+  buildKeywords();
+  showToast('Keyword added','success');
+}
+function removeKeyword(i) { keywords.splice(i,1); buildKeywords(); showToast('Keyword removed','warn'); }
+
+var modRules = [
+  {label:'Auto-ban after 3 spam reports',on:true},
+  {label:'Require email verification',on:true},
+  {label:'Block TOR exit node IPs',on:true},
+  {label:'Quarantine new accounts <24h',on:false},
+];
+function buildModRules() {
+  document.getElementById('mod-rules').innerHTML = modRules.map((r,i) =>
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(26,108,246,0.06)"><span style="font-size:12.5px;font-weight:600;color:var(--text2)">'+r.label+'</span><button class="toggle '+(r.on?'on':'')+'" onclick="modRules['+i+'].on=!modRules['+i+'].on;this.classList.toggle(\'on\',modRules['+i+'].on);showToast(modRules['+i+'].on?\'Rule enabled\':\'Rule disabled\',modRules['+i+'].on?\'success\':\'warn\')"></button></div>'
+  ).join('');
+}
+
+var engineToggles = ['Real-time scanning','Phishing URL detection','Image OCR scanning','Community threat sharing'];
+function buildEngineSettings() {
+  document.getElementById('engine-settings').innerHTML = engineToggles.map((t,i) =>
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(26,108,246,0.06)"><span style="font-size:12.5px;font-weight:600;color:var(--text2)">'+t+'</span><button class="toggle '+(i<2||i===3?'on':'')+'" onclick="this.classList.toggle(\'on\');showToast(this.classList.contains(\'on\')?\'Enabled\':\'Disabled\',\'info\')"></button></div>'
+  ).join('');
+}
+
+var notifToggles = ['Email alerts on critical threat','Daily summary digest','Slack webhook integration'];
+function buildNotifSettings() {
+  document.getElementById('notif-settings').innerHTML = notifToggles.map((t,i) =>
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(26,108,246,0.06)"><span style="font-size:12.5px;font-weight:600;color:var(--text2)">'+t+'</span><button class="toggle '+(i<2?'on':'')+'" onclick="this.classList.toggle(\'on\');showToast(this.classList.contains(\'on\')?\'Enabled\':\'Disabled\',\'info\')"></button></div>'
+  ).join('');
+}
+
+var auditData = [
+  {ts:'10:47:01',admin:'Super Admin',action:'User suspended',target:'david.njoroge',ip:'197.156.xx.xx',sev:'warn'},
+  {ts:'10:31:22',admin:'Super Admin',action:'Threat pattern added',target:'PHISH-0083',ip:'197.156.xx.xx',sev:'info'},
+  {ts:'09:58:44',admin:'James M.',action:'Report resolved',target:'RPT-0838',ip:'41.90.xx.xx',sev:'success'},
+  {ts:'09:44:10',admin:'Super Admin',action:'Settings changed',target:'Detection sensitivity',ip:'197.156.xx.xx',sev:'info'},
+  {ts:'09:12:30',admin:'Cynthia M.',action:'Keyword added',target:"'mpesa refund'",ip:'105.29.xx.xx',sev:'warn'},
+  {ts:'08:30:00',admin:'System',action:'Threat DB refresh',target:'Auto-scheduled',ip:'internal',sev:'success'},
+];
+function buildAudit() {
+  function sB(s){return s==='warn'?'badge-warn':s==='success'?'badge-success':'badge-info';}
+  function sL(s){return s==='warn'?'Warning':s==='success'?'Success':'Info';}
+  document.getElementById('audit-tbody').innerHTML = auditData.map(a =>
+    '<tr><td class="td-mono">Mar 10 '+a.ts+'</td><td style="font-weight:600;font-size:12.5px">'+a.admin+'</td><td style="font-size:12.5px">'+a.action+'</td><td class="td-mono">'+a.target+'</td><td class="td-mono">'+a.ip+'</td><td><span class="badge '+sB(a.sev)+'">'+sL(a.sev)+'</span></td></tr>'
+  ).join('');
+}
+
+// ══════════════════════════════════
+// CHARTS
+// ══════════════════════════════════
+function buildCharts() {
+  var sc = document.getElementById('scanChart');
+  if(!sc) return;
+  var labels = ['Feb 25','Feb 26','Feb 27','Feb 28','Mar 1','Mar 2','Mar 3','Mar 4','Mar 5','Mar 6','Mar 7','Mar 8','Mar 9','Mar 10'];
+  new Chart(sc, {
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Total Scans',data:[2100,2340,1980,2600,3100,2800,2400,3400,3200,3600,3100,3800,3500,3842],borderColor:'#1a6cf6',backgroundColor:'rgba(26,108,246,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#1a6cf6'},
+      {label:'Scams Detected',data:[420,510,388,601,720,630,511,810,740,850,700,920,810,960],borderColor:'#e5382a',backgroundColor:'rgba(229,56,42,0.06)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#e5382a'},
+    ]},
+    options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{family:'Plus Jakarta Sans',size:11},usePointStyle:true}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(26,108,246,0.06)'},ticks:{font:{size:10}}}}}
+  });
+
+  var pc = document.getElementById('threatPie');
+  if(!pc) return;
+  var pColors = ['#e5382a','#f5a623','#8b5cf6','#1a6cf6','#00c2a8','#94a3b8'];
+  var pLabels = ['Phishing','Investment','Romance','Employment','Crypto','Other'];
+  var pData = [38,27,14,10,7,4];
+  new Chart(pc,{type:'doughnut',data:{labels:pLabels,datasets:[{data:pData,backgroundColor:pColors,borderWidth:2,borderColor:'white'}]},options:{responsive:true,plugins:{legend:{display:false}},cutout:'65%'}});
+  document.getElementById('threat-legend').innerHTML = pLabels.map((l,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px"><div style="display:flex;align-items:center;gap:6px"><div style="width:8px;height:8px;border-radius:50%;background:'+pColors[i]+'"></div><span style="color:var(--text2);font-weight:600">'+l+'</span></div><span style="color:var(--text3);font-family:\'DM Mono\',monospace">'+pData[i]+'%</span></div>').join('');
+}
+
+// ══════════════════════════════════
+// LIVE CLOCK
+// ══════════════════════════════════
+function updateTime() {
+  var el = document.getElementById('live-time');
+  if(el) el.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' EAT';
+}
+
+// ══════════════════════════════════
+// INIT APP (after login)
+// ══════════════════════════════════
+function initApp() {
+  buildUsers(); buildReports(); buildScans(); buildThreats();
+  buildActivity(); buildSystemStatus(); buildCategories();
+  buildModerationQueue(); buildKeywords(); buildModRules();
+  buildEngineSettings(); buildNotifSettings(); buildAudit();
+  renderInboxList(inboxMessages);
+  setTimeout(buildCharts, 150);
+  setInterval(updateTime, 1000);
+  updateTime();
+
+  // Live activity simulation
+  setInterval(function() {
+    var msgs = [
+      {color:'var(--danger)',msg:'<b>New urgent message</b> from user — possible active scam',time:'just now'},
+      {color:'var(--primary)',msg:'<b>New contact form</b> received — General enquiry',time:'just now'},
+      {color:'var(--success)',msg:'<b>Scan completed</b> — SMS flagged as phishing (96.1%)',time:'just now'},
+    ];
+    activities.unshift(msgs[Math.floor(Math.random()*msgs.length)]);
+    if(activities.length>6) activities.pop();
+    buildActivity();
+  }, 15000);
+}
+
+// Allow Enter key on login form
+document.getElementById('admin-id').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('admin-pass').focus(); });
+</script>
+<script src="/static/scamshield-admin-api.js"></script>
+</body>
+</html>
